@@ -96,3 +96,62 @@ func (d *Database) GetRecentAttacks(limit int) ([]AttackLog, error) {
 
 	return attacks, nil
 }
+
+// GetAttackStats
+func (d *Database) GetAttackStats() (map[string]interface{}, error) {
+	stats := make(map[string]interface{})
+
+	// Total attacks
+	var total int
+	d.db.QueryRow("SELECT COUNT(*) FROM attacks").Scan(&total)
+	stats["total"] = total
+
+	rows, _ := d.db.Query(`SELECT service, COUNT(*) as count FROM attacks GROUP BY service`)
+	defer rows.Close()
+
+	serviceStats := make(map[string]int)
+	for rows.Next() {
+		var service string
+		var count int
+		rows.Scan(&service, &count)
+		serviceStats[service] = count
+	}
+	stats["by_service"] = serviceStats
+
+	// Top attacking IPs
+	ipRows, _ := d.db.Query(`SELECT remote_addr, COUNT(*) as count FROM attacks GROUP BY remote_addr ORDER BY count DESC LIMIT 10`)
+	defer ipRows.Close()
+
+	topIPs := make(map[string]int)
+	for ipRows.Next() {
+		var ip string
+		var count int
+		ipRows.Scan(&ip, &count)
+		topIPs[ip] = count
+	}
+	stats["top_ips"] = topIPs
+
+	// Top credentials
+	credRows, _ := d.db.Query(`SELECT username, password, COUNT(*) as count FROM attacks WHERE username !='' GROUP BY username, password ORDER BY count DESC LIMIT 10`)
+	defer credRows.Close()
+
+	type Credential struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+		Count    int    `json:"count"`
+	}
+
+	topCreds := []Credential{}
+	for credRows.Next() {
+		var cred Credential
+		credRows.Scan(&cred.Username, &cred.Password, &cred.Count)
+		topCreds = append(topCreds, cred)
+	}
+	stats["top_credentials"] = topCreds
+
+	return stats, nil
+}
+
+func (d *Database) Close() {
+	d.db.Close()
+}
