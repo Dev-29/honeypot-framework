@@ -1,0 +1,24 @@
+{
+  "ssh": {
+    "enabled": true,
+    "port": "2222",
+    "banner": "SSH-2.0-OpenSSH_7.6p1 Ubuntu-4ubuntu0.3"
+  },
+  "ftp": {
+    "enabled": true,
+    "port": "2121",
+    "banner": "220 FTP server ready"
+  },
+  "http": {
+    "enabled": true,
+    "port": "8080",
+    "banner": "Apache/2.4.41 (Ubuntu)"
+  },
+  "database": {
+    "path": "logs/honeypot.db"
+  },
+  "web_dashboard": {
+    "enabled": true,
+    "port": "9090"
+  }
+}
