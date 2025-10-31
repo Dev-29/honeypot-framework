@@ -54,7 +54,6 @@ func (d *Database) createTables() error {
 		CREATE INDEX IF NOT EXISTS idx_service ON attacks (service);
 		CREATE INDEX IF NOT EXISTS idx_remote_addr ON attacks (remote_addr);
 	`
-
 	_, err := d.db.Exec(schema)
 	return err
 }
@@ -109,6 +108,7 @@ func (d *Database) GetAttackStats() (map[string]interface{}, error) {
 	rows, _ := d.db.Query(`SELECT service, COUNT(*) as count FROM attacks GROUP BY service`)
 	defer rows.Close()
 
+	// Attacks by service
 	serviceStats := make(map[string]int)
 	for rows.Next() {
 		var service string
@@ -141,6 +141,7 @@ func (d *Database) GetAttackStats() (map[string]interface{}, error) {
 		Count    int    `json:"count"`
 	}
 
+	// Collect top credentials
 	topCreds := []Credential{}
 	for credRows.Next() {
 		var cred Credential
